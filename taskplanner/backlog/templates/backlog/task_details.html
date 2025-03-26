@@ -1,27 +1,31 @@
 {% extends "backlog/base.html" %}
 
-{% block title %}{{ task.title }}{% endblock %}
-
-{% block content %}
+{% block content %} 
 <div class="task-detail">
     <h1>{{ task.title }}</h1>
     <p><strong>Kuvaus:</strong> {{ task.description }}</p>
     <p class="priority-{% if task.priority >= 4 %}high{% elif task.priority == 3 %}medium{% else %}low{% endif %}">
         <strong>Prioriteetti:</strong> {{ task.priority }}
-        <p>Tila:    {% if task.completed %}✅ Valmis <a href="{% url 'task_not_done' task.id %}">Merkitse keskeneräiseksi</a>
+        <p>Tila:    
+            {% if task.completed %}✅ Valmis <a href="{% url 'task_not_done' task.id %}">Merkitse keskeneräiseksi</a>
             {% else %}❌ Kesken <a href="{% url 'task_done' task.id %}">Merkitse valmiiksi</a>
             {% endif %} 
-            <br>
-            <a href="{% url 'task_edit_form' task.id %}">Muokkaa django.forms-näkymässä</a><br>
-            <a href="{% url 'task_edit_model_form' task.id %}">Muokkaa django.modelForm-näkymässä</a><br>
-            <a href="{% url 'task_delete' task.id %}">Poista</a>
+            </p>
+            <p>
+                <a href="{% url 'task_delete' task.id %}">Poista tehtävä</a>
+            </p>
+            <p>
+                <a href="{% url 'task_edit_form' task.id %}">Muokkaa django.forms-näkymässä</a><br> 
+                <a href="{% url 'task_edit_model_form' task.id %}">Muokkaa django.modelForm-näkymässä</a><br>
             </p>
 
             {% for comment in task.comments.all %}
                 <div class="comment">
-                    <p><strong>{{ comment.user.username }}</strong> ({{ comment.created_at|date:"Y-m-d H:i" }}):</p>
+                    <p><strong>{{ comment.user.username }}</strong> 
+            ({{ comment.created_at|date:"Y-m-d H:i" }}):</p>
                     <p>{{ comment.content }}</p>
-                    <p><a href="{% url 'delete_comment' task.id comment.id %}">Poista kommentti</a>
+                    <p><a href="{% url 'delete_comment' task.id comment.id %}">
+            Poista kommentti</a>
                 </div>
             {% empty %}
                 <p>Ei vielä kommentteja</p>
@@ -30,10 +34,12 @@
             {% if user.is_authenticated %}
             <form method="post" action="{% url 'add_comment' task.id %}">
                 {% csrf_token %}
-                <textarea name="content" required placeholder="Anna uusi kommentti..."></textarea></br>
+                <textarea name="content" required placeholder="Anna uusi kommentti...">
+            </textarea></br>
                 <button type="submit">Lisää kommentti</button>
             </form>
             {% endif %}
+
     </p>
     <a href="{% url 'task_list' %}">Takaisin listaan</a>
 </div>

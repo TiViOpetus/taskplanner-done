@@ -1,21 +1,20 @@
 {% extends "backlog/base.html" %}
-
+ 
 {% block title %}Tehtävälista{% endblock %}
-
+ 
 {% block content %}
     <h1>Tehtävälista</h1>
-
+ 
     <p>Tervetuloa, {{ user.username }}!</p>
-
+ 
     {% if request.user.is_superuser or request.user.is_staff %}
         <p><strong>Admin-tila:</strong> Näytetään kaikki tehtävät.</p>
     {% else %}
         <p><strong>Peruskäyttäjän tila:</strong> Näytetään vain omat tehtävät.</p>
     {% endif %}
-
     <h2>Kanban taulu</h2>
     <div class="task-container d-flex flex-wrap gap-3">
-        {% for task_class, tasks in tasks_by_class.items %}
+        {% for task_class, tasks in luokitellut_tehtavat.items %}
             <div class="task-column border p-3">
                 <h3>{{ task_class.title }}</h3>
                 {% for task in tasks %}
