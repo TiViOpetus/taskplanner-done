@@ -1,7 +1,8 @@
 {% extends "backlog/base.html" %}
- 
-{% block content %}
 
+{% block title %}{{ task.title }}{% endblock %}
+
+{% block content %}
 <div class="task-detail">
     <h3>Muokkaa tehtäväkorttia</h3>
     <form method="post">
@@ -9,9 +10,7 @@
         {{ form.as_p }}
         <button type="submit">Tallenna</button>
     </form>
- 
+
     <a href="{% url 'task_list' %}">Takaisin tehtävälistaan</a>
 </div>
-
 {% endblock %}
- 

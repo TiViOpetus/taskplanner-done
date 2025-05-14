@@ -11,10 +11,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv()  # Lataa ympäristömuuttujat .env-tiedostosta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,13 +24,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+#SECRET_KEY = 'django-insecure-jn(d81a4=3rc5z+w4%i1)=&zrup3i4=c-!v%vy$pk)2!di#dmj'
 SECRET_KEY = os.getenv('SECRET_KEY')
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
-
 ALLOWED_HOSTS = tuple(os.getenv('ALLOWED_HOSTS', '127.0.0.1 localhost').split())
 
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
+
+#ALLOWED_HOSTS = ['taskplanner-markkukynsijarvilektor.onrender.com']
 
 # Application definition
 
@@ -44,10 +46,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'whitenoise.runserver_nostatic',
     'rest_framework',
-    'rest_framework.authtoken',
+    "rest_framework.authtoken", 
     'backlog',
     'drf_yasg',
 ]
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -58,12 +61,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = [
-     "http://localhost:5173",  # React frontend (Vite)
-     "http://127.0.0.1:5173",  # Try adding this too
- ]
+
 
 ROOT_URLCONF = 'taskplanner.urls'
 
@@ -89,6 +90,12 @@ WSGI_APPLICATION = 'taskplanner.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': BASE_DIR / 'db.sqlite3',
+#    }
+#}
 DATABASES = {
     'default': {
         'ENGINE': os.getenv('DB_ENGINE'), 
@@ -99,7 +106,8 @@ DATABASES = {
         'PORT':  os.getenv('DB_PORT'),
     }
 }
-print(os.getenv('DB_ENGINE'))
+
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -134,12 +142,19 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = '/static/'
 
-STATIC_URL = 'static/'
+print("**************")
+print(BASE_DIR)
+print(STATIC_ROOT)
+print("**************")
 
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -148,7 +163,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Where user is redirected after login/logout and which url to use for login
 LOGIN_REDIRECT_URL = '/tasks/'
-LOGOUT_REDIRECT_URL = '/login/'
+LOGOUT_REDIRECT_URL = None  
 LOGIN_URL = '/login/'
 
 REST_FRAMEWORK = {
@@ -157,7 +172,15 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
-        "rest_framework.authentication.TokenAuthentication", 
+        "rest_framework.authentication.TokenAuthentication",  # Lisää tämä
         "rest_framework.authentication.BasicAuthentication",
     ],
 }
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # React frontend (Vite)
+    "http://127.0.0.1:5173",  # Try adding this too
+]
+
+
+

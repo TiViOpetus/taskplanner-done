@@ -6,8 +6,16 @@ import EditTaskForm from "./components/EditTaskForm";
 function App() {
   const [tasks, setTasks] = useState([]);
   const [editingTask, setEditingTask] = useState(null);
+  const token = "0308b96aec560a874b810e1da899487c4b11feb3"; // Replace with your actual token
 
-  const token = "58027c58208b1320bb9b6dfa8121f3e3d66cfd16"; 
+  const handleTaskAdded = (newTask) => {
+    setTasks([newTask, ...tasks]);
+  };
+  const handleTaskUpdated = (updatedTask) => {
+    setTasks(tasks.map(task => (task.id === updatedTask.id ? updatedTask : task)));
+    setEditingTask(null);
+  };
+
   useEffect(() => {
     async function fetchData() {
       const data = await getTasks(token);
@@ -16,43 +24,27 @@ function App() {
     fetchData();
   }, []);
 
-  const handleTaskAdded = (newTask) => {
-    setTasks([newTask, ...tasks]);
-  };
-  const handleTaskUpdated = (updatedTask) => {
-    setTasks(tasks.map(task => (task.id === updatedTask.id ? updatedTask : task)));
-    setEditingTask(null);
-  }
- 
-
   return (
     <div>
       <h1>Task Planner</h1>
-      {editingTask ? 
-      (
-          <EditTaskForm
-            task={editingTask}
-            onTaskUpdated={handleTaskUpdated}
-            token={token}
-          ></EditTaskForm>
-
-      ) 
-      : (
-      
-        
-      <ul>
-        {tasks.map((task) => (
-          <li key={task.id}>
-            <strong>{task.title}</strong>: {task.description}
-            <button onClick={() => setEditingTask(task)}>Muokkaa</button>
-          </li>
-        ))}
-      </ul>
-      )}
-
+      {editingTask ? (
+                <EditTaskForm
+                    task={editingTask}
+                    onTaskUpdated={handleTaskUpdated}
+                    token={token}
+                />
+            ) : (
+                <ul>
+                    {tasks.map(task => (
+                        <li key={task.id}>
+                            <strong>{task.title}</strong> - {task.description}
+                            <button onClick={() => setEditingTask(task)}>Muokkaa</button>
+                        </li>
+                    ))}
+                </ul>
+            )}
     </div>
   );
 }
 
- 
 export default App;

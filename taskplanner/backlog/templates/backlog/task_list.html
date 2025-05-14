@@ -1,26 +1,206 @@
 {% extends "backlog/base.html" %}
- 
+
 {% block title %}Tehtävälista{% endblock %}
- 
+
 {% block content %}
     <h1>Tehtävälista</h1>
- 
+
     <p>Tervetuloa, {{ user.username }}!</p>
- 
+
     {% if request.user.is_superuser or request.user.is_staff %}
         <p><strong>Admin-tila:</strong> Näytetään kaikki tehtävät.</p>
     {% else %}
         <p><strong>Peruskäyttäjän tila:</strong> Näytetään vain omat tehtävät.</p>
     {% endif %}
+
     <h2>Kanban taulu</h2>
+
+    <script>
+        var kaikkiKortitEsilla = true;
+
+        function SuoritaJotain()
+        {
+            var painike = document.getElementById("ekanappi");
+            painike.innerHTML = "Juupa juu";
+
+            var tekstialue = document.getElementById("jokutekstialue");
+            tekstialue.style.backgroundColor = '#FF0000';
+
+            var kokoelmaKorteista = document.getElementsByClassName("task-card");
+  
+            for(var i=0; i<kokoelmaKorteista.length; i++)
+            {
+                tekstialue.innerHTML += kokoelmaKorteista[i].innerHTML;
+            }
+        }
+
+        
+
+        function PiilotaValmiitTaiNaytaKaikki()
+        {
+            // Hae yksittäinen elementti: hae painike
+            var painike = document.getElementById("toggle-incomplete");
+            
+            if (kaikkiKortitEsilla == true)
+            {
+                painike.innerHTML = "Näytä kaikki";
+                kaikkiKortitEsilla = false;
+            }
+            else
+            {
+                painike.innerHTML = "Näytä vain keskeneräiset";
+                kaikkiKortitEsilla = true;
+            }
+            
+            // Hae KAIKKI elementit joiden class-sisältönä on task-card
+            var tehtavakortit = document.getElementsByClassName("task-card");
+
+            for(var i=0;i<tehtavakortit.length;i++)
+            {
+                var onkoTehtavaValmis = tehtavakortit[i].innerHTML.includes('Valmis');
+                var onkoTehtavaValmisOikeasti = tehtavakortit[i].querySelector(".task-completed").value;
+                console.log(onkoTehtavaValmisOikeasti);
+                if(kaikkiKortitEsilla == false && onkoTehtavaValmisOikeasti === "True")
+                {
+                    tehtavakortit[i].style.display = "none";
+                }
+                else
+                {
+                    tehtavakortit[i].style.display = "block";
+                }
+            }
+        }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";").map(c => c.trim());
+            for (let cookie of cookies) {
+                if (cookie.startsWith(name + "=")) {
+                    cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+ 
+
+    function MuokkaaKuvausta(button)
+    {
+        // Painikkeen "parent"-elementti, eli task-card-luokan elementti
+        var card = button.parentElement; 
+
+        // Haetaan tehtäväkortilta sen tehtävän kuvauksen tekstikappale sekä otsikko
+        var descElem = card.querySelector(".task-desc");
+        var titleElem = card.querySelector(".task-title");
+
+        // Ja siitä vielä tekstimuotoinen kuvaus ja otsikko
+        var oldText = descElem.textContent;
+        var oldTitle = titleElem.textContent;
+
+        // Tallennetaan tehtäväkortin id myöhempää käyttöä varten
+        var taskId = card.dataset.taskId;
+ 
+        // Luodaan uusi HTML-elementti: textarea
+        var textarea = document.createElement("textarea");
+        textarea.value = oldText;
+
+        // Luodaan uusi HTML-elementti otsikon muokkaukseen
+        var titlearea = document.createElement("textarea");
+        titlearea.value = oldTitle;
+
+        // Annetaan sille bootstrapin css-muotoilusta sopiva luokka
+        textarea.className = "form-control mb-2";
+        titlearea.className = "form-control mb-2";
+ 
+        // Luodaan kaksi HTML-elementtiä, painikkeet tallennukselle ja peruutukselle
+        var saveBtn = document.createElement("button");
+        saveBtn.textContent = "Tallenna";
+        saveBtn.className = "btn btn-success btn-sm me-2";
+        var cancelBtn = document.createElement("button");
+        cancelBtn.textContent = "Peruuta";
+        cancelBtn.className = "btn btn-outline-secondary btn-sm";
+ 
+        // Tyhjennetään nykyinen tekstikappale pois tehtäväkortista ja korvataan se textarea-kentällä 
+        // ja lisätään myös tallennus/peruutus-painikkeet tehtäväkortin sisälle
+        descElem.replaceWith(textarea);
+        button.replaceWith(saveBtn);
+        saveBtn.after(cancelBtn);
+        titleElem.replaceWith(titlearea);
+ 
+        saveBtn.addEventListener("click", function() {
+            // Luo uusi tekstikappale <p> jolle annat sisällöksi textarea.value-sisällön
+            // Ja lisää se takaisin tehtäväkortin sisällöksi
+            // Poista myös tallenna/peruuta-painikkeet ja lisää button takaisin
+            var newText = textarea.value;
+            var newTitle = titlearea.value;
+ 
+            fetch(`/api/tasks/${taskId}/`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify({ title: newTitle, description: newText })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Virhe tallennuksessa");
+                }
+                return response.json();
+            })
+            .then(data => {
+                var newP = document.createElement("p");
+                newP.className = "task-desc";
+                newP.textContent = newText;
+
+                var newHeader = document.createElement("h4");
+                newHeader.className = "task-title"; 
+                newHeader.textContent = newTitle;
+        
+                textarea.replaceWith(newP);
+                titlearea.replaceWith(newHeader);
+                saveBtn.replaceWith(button);
+                cancelBtn.remove();
+            })
+            .catch(error => {
+                alert(error.message);
+            });
+ 
+        });
+ 
+        cancelBtn.addEventListener("click", function() {
+            // Käytä oldText-muuttujan sisältöä että saat palautettua vanhan tekstin takaisin
+            // Ja poista tallenna/peruuta painikkeet ja lisää alkuperäinen button takaisin
+            saveBtn.replaceWith(button);
+            textarea.replaceWith(descElem);
+            titlearea.replaceWith(titleElem);
+            cancelBtn.remove();
+        });
+    }
+
+        
+    </script>
+
+    <p id="jokutekstialue">abc tekstiä</p>
+
+    <button id="toggle-incomplete" class="btn btn-primary mb-3" onclick="PiilotaValmiitTaiNaytaKaikki();">Näytä vain keskeneräiset</button>
+
+    <button id="ekanappi" class="btn btn-secondary mb-3" onclick="SuoritaJotain();">Paina tästä!</button>
+
     <div class="task-container d-flex flex-wrap gap-3">
-        {% for task_class, tasks in luokitellut_tehtavat.items %}
+        {% for task_class, tasks in tasks_by_class.items %}
             <div class="task-column border p-3">
                 <h3>{{ task_class.title }}</h3>
                 {% for task in tasks %}
-                    <div class="task-card p-2 border rounded">
-                        <h4>{{ task.title }}</h4>
-                        <p>{{ task.description }}</p>
+                    <div class="task-card p-2 border rounded" data-task-id="{{ task.id }}">
+                        <h4 class="task-title">{{ task.title }}</h4>
+                        <p class="task-desc">{{ task.description }}</p>
+
+                        <button class="edit-desc-btn btn btn-sm btn-secondary" onclick="MuokkaaKuvausta(this);">Muokkaa kuvausta</button>
+
+                        <input type="hidden" class="task-completed" value="{{ task.completed }}"/>
                         {% if task.completed %}
                             ✅ Valmis
                         {% else %}
@@ -32,4 +212,6 @@
             </div>
         {% endfor %}
     </div>
+
+
 {% endblock %}
